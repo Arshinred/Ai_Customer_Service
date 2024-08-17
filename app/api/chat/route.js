@@ -11,7 +11,7 @@ export async function POST(request) {
       {
         parts: [
           {
-            text: message,
+            text: `You are a nutritionist. Provide detailed and helpful dietary advice. ${message}`,
           },
         ],
       },

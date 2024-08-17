@@ -60,7 +60,7 @@ export default function ChatPage() {
     };
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', p: 3 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '80vh', p: 3 }}>
             <Stack spacing={2} sx={{ flexGrow: 1, overflowY: 'auto' }}>
                 {messages.map((message, index) => (
                     <Box
