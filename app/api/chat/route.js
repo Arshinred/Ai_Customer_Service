@@ -1,57 +1,46 @@
-import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { NextResponse } from 'next/server';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY, // Make sure to set your API key in the environment variables
-});
+const apiKey = process.env.API_KEY;
+const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
-const systemPrompt = `You are a knowledgeable and friendly AI nutritionist. 
-Your primary function is to provide accurate, evidence-based nutritional advice to users. 
-You should be able to answer a wide range of questions about diet, nutrition, and health. 
-Be informative, concise, and easy to understand. Avoid providing medical advice. 
-If a user's query indicates a potential health concern, suggest they consult with a healthcare professional.
+export async function POST(request) {
+  const { message } = await request.json();
 
-Key points to remember:
-
-Prioritize user safety and well-being.
-Offer personalized advice based on the user's information, if provided.
-Use clear and simple language.
-Avoid making definitive claims or guarantees.
-Respect cultural and dietary restrictions.`;
-
-export async function POST(req) {
-    const data = await req.json();
-
-    const completion = await openai.chat.completions.create({ 
-        messages: [
-            {
-                role: 'system',
-                content: systemPrompt
-            },
-            ...data,
+  const requestBody = {
+    contents: [
+      {
+        parts: [
+          {
+            text: message,
+          },
         ],
-        model: 'gpt-4o-mini', 
-        stream: true    
+      },
+    ],
+  };
+
+  try {
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
     });
 
-    const stream = new ReadableStream({
-        async start(controller) {
-            const encoder = new TextEncoder();
-            try {
-                for await (const chunk of completion) {  
-                    const content = chunk.choices[0]?.delta.content;
-                    if (content) {
-                        const text = encoder.encode(content);
-                        controller.enqueue(text);
-                    }
-                }
-            } catch (error) {
-                controller.error(error);  
-            } finally {
-                controller.close();
-            }
-        }  
-    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
-    return new NextResponse(stream);
+    const data = await response.json();
+    const generatedText = data.candidates[0].content.parts[0].text.trim();
+    return new Response(generatedText, {
+      headers: { 'Content-Type': 'text/html' },
+    });
+  } catch (error) {
+    console.error('Error generating content:', error);
+    return new Response('An error occurred while generating content.', {
+      status: 500,
+      headers: { 'Content-Type': 'text/plain' },
+    });
+  }
 }
