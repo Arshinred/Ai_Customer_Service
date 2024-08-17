@@ -4,44 +4,58 @@ import { Box, TextField, Button, Stack } from '@mui/material';
 
 export default function ChatPage() {
     const [messages, setMessages] = useState([
-        { role: 'system', content: 'How can I help you today?' }
+        { role: 'system', content: 'Hello, I am your AI Nutritionist. How may I be of service today?' }
     ]);
     const [input, setInput] = useState('');
+    const [isSending, setIsSending] = useState(false); 
 
     const handleSendMessage = async () => {
+        if (!input.trim() || isSending) return; 
+
         const userMessage = { role: 'user', content: input };
         setMessages(prevMessages => [...prevMessages, userMessage]);
         setInput('');
+        setIsSending(true);
 
-        const response = await fetch('/api/chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify([{ role: 'user', content: input }])
-        });
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let done = false;
-        let botResponse = '';
-
-        while (!done) {
-            const { value, done: readerDone } = await reader.read();
-            done = readerDone;
-            const chunk = decoder.decode(value);
-            botResponse += chunk;
-
-            setMessages(prevMessages => {
-                const newMessages = [...prevMessages];
-                const lastMessageIndex = newMessages.length - 1;
-                if (newMessages[lastMessageIndex]?.role === 'system') {
-                    newMessages[lastMessageIndex].content += chunk;
-                } else {
-                    newMessages.push({ role: 'system', content: chunk });
-                }
-                return newMessages;
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: input }) 
             });
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let done = false;
+            let botResponse = '';
+
+            while (!done) {
+                const { value, done: readerDone } = await reader.read();
+                done = readerDone;
+                const chunk = decoder.decode(value);
+                botResponse += chunk;
+
+                setMessages(prevMessages => {
+                    const newMessages = [...prevMessages];
+                    const lastMessageIndex = newMessages.length - 1;
+                    if (newMessages[lastMessageIndex]?.role === 'system') {
+                        newMessages[lastMessageIndex].content += chunk;
+                    } else {
+                        newMessages.push({ role: 'system', content: chunk });
+                    }
+                    return newMessages;
+                });
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            setMessages(prevMessages => [
+                ...prevMessages,
+                { role: 'system', content: 'There was an error processing your request. Please try again.' }
+            ]);
+        } finally {
+            setIsSending(false);
         }
     };
 
@@ -76,7 +90,7 @@ export default function ChatPage() {
                         }
                     }}
                 />
-                <Button variant="contained" onClick={handleSendMessage}>
+                <Button variant="contained" onClick={handleSendMessage} disabled={isSending}>
                     Send
                 </Button>
             </Stack>
