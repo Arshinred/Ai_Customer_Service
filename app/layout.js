@@ -17,9 +17,7 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
         />
         <style>{`
-          main {
-            height: 85vh;
-          }
+          
           @keyframes gradientBG {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -56,7 +54,14 @@ export default function RootLayout({ children }) {
       <body className={`${inter.className} min-h-screen animate-gradient`} style={{ overflow: 'hidden' }}>
         <div className="container mx-auto p-4">
           <header className="glass-effect text-white p-6 rounded-t-lg animate-fade-in">
-            <h1 className="text-3xl font-bold text-white-500">AI Nutritionist</h1>
+            <div className='top'>
+            <h1 className="text-3xl font-bold text-white-500" >AI Nutritionist</h1>
+            <p> 
+              <a href="https://github.com/maahinNafi" target="_blank"> Maahin Nafi</a>, 
+              <a href="https://github.com/ajavaid7111" target="_blank"> Ahmed Javaid</a>, 
+              <a href="https://github.com/Arshinred" target="_blank"> Arshad Hossain</a>
+            </p>
+            </div>
             <p className="mt-2 text-sm">Engage in conversation with your personal AI nutritionist</p>
           </header>
           <main className="bg-white p-8 rounded-b-lg shadow-lg animate-slide-up">
