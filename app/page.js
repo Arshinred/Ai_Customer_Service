@@ -16,7 +16,9 @@ export default function ChatPage() {
         setMessages(prevMessages => [...prevMessages, userMessage]);
         setInput('');
         setIsSending(true);
-try {
+
+
+        try {
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {
@@ -57,8 +59,10 @@ try {
             setIsSending(false);
         }
     };
-return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: '85vh', p: 3 }}>
+
+
+    return (
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '80vh', p: 3 }}>
             <Stack spacing={2} sx={{ flexGrow: 1, overflowY: 'auto' }}>
                 {messages.map((message, index) => (
                     <Box
@@ -94,4 +98,6 @@ return (
             </Stack>
         </Box>
     );
+
 }
+
