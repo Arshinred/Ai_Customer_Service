@@ -1,72 +1,58 @@
-import { NextResponse } from "next/server"
-import OpenAI from "openai"
+import { NextResponse } from 'next/server';
 
-const systemPrompt = `You are a customer service bot for Headstarter AI, a platform that conducts AI-powered interviews for software engineering jobs. Your primary function is to assist users with questions, troubleshoot issues, and provide information about the platform.
+const apiKey = process.env.API_KEY;
+const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
-Key information about Headstarter AI:
+export async function POST(request) {
+  const { message } = await request.json();
 
-It is a platform for AI-powered software engineering interviews.
-It offers features such as scheduling interviews, conducting interviews, analyzing interview results, and providing feedback.
-Your role:
-
-Provide clear and concise answers to user inquiries.
-Offer troubleshooting steps for common issues.
-Guide users through platform features and functionalities.
-Direct users to relevant resources, such as help articles or FAQs.
-Escalate complex issues to human support when necessary.
-Tone:
-
-Be professional, helpful, and empathetic.
-Use clear and easy-to-understand language.
-Avoid technical jargon unless necessary.
-Example interactions:
-
-User: "How do I schedule an interview?"
-You: "To schedule an interview, please log in to your Headstarter account and click on the 'Schedule Interview' button. You will be prompted to select an available time slot and interview type."
-User: "I'm having trouble logging in."
-You: "I'm sorry to hear that. Please check your email for a password reset link or contact our support team for assistance."
-Remember:
-
-Always refer to the platform as "Headstarter AI".
-Use the provided information to craft informative and helpful responses.
-Be prepared to handle a variety of user questions and requests. `
-
-export async function POST(req){
-    const openai = new OpenAI()
-    const dataa = await req.json()
-
-    const completetion = await openai.chat.completetion.create({  // await allows code to keep running during function calls
-        message: 
-        [
-        {
-            role: 'system',
-            content: systemPrompt
-        },
-        ...data,
+  const requestBody = {
+    contents: [
+      {
+        parts: [
+          {
+            text: `You are a knowledgeable and friendly AI nutritionist.
+            Your primary function is to provide accurate, evidence-based nutritional advice to users. 
+            You should be able to answer a wide range of questions about diet, nutrition, and health. 
+            Be informative, concise, and easy to understand. Avoid providing medical advice. 
+            If a user's query indicates a potential health concern, suggest they consult with a healthcare professional.
+            
+            Key points to remember:
+            
+            Prioritize user safety and well-being.
+            Offer personalized advice based on the user's information, if provided.
+            Use clear and simple language.
+            Avoid making definitive claims or guarantees.
+            Respect cultural and dietary restrictions. ${message}` ,
+          },
         ],
-        model: 'gpt-4o-mini',
-        stream: true    
-    })
-    const steam = new ReadableStream({
-        async start(controller){
-            const encoder = new TextEncoder()
-            try{
-                for await (const chunk of completetion){ // open ai sends out completion in chunks
-                    const content = chunk.choices[0]?.delta.content
-                    if (content){
-                        const text = encoder.encode(content)
-                        controller.enqueue(text)
-                    }
-                }
-            }
-            catch(error){
-                controller.error(err)
-            }
-            finally {
-                controller.close()
-            }
-        }  
-    })
+      },
+    ],
+  };
 
-    return new NextResponse(stream)
+  try {
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const generatedText = data.candidates[0].content.parts[0].text.trim();
+    return new Response(generatedText, {
+      headers: { 'Content-Type': 'text/html' },
+    });
+  } catch (error) {
+    console.error('Error generating content:', error);
+    return new Response('An error occurred while generating content.', {
+      status: 500,
+      headers: { 'Content-Type': 'text/plain' },
+    });
+  }
 }
