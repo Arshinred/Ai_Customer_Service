@@ -17,6 +17,7 @@ export default function ChatPage() {
         setInput('');
         setIsSending(true);
 
+
         try {
             const response = await fetch('/api/chat', {
                 method: 'POST',
@@ -59,6 +60,7 @@ export default function ChatPage() {
         }
     };
 
+
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '80vh', p: 3 }}>
             <Stack spacing={2} sx={{ flexGrow: 1, overflowY: 'auto' }}>
@@ -96,4 +98,6 @@ export default function ChatPage() {
             </Stack>
         </Box>
     );
+
 }
+
